@@ -46,7 +46,7 @@ std::vector<int> read_config(const char* config_name,
         config_map[master_socket] = std::vector<std::pair<char*, int>>();
         int new_n;
         char ip[SIZE_IP];
-        while (sscanf(buf_config + n, "%s:%d %n", ip, &port, &new_n) == 2) {
+        while (sscanf(buf_config + n, "%s : %d %n", ip, &port, &new_n) == 2) {
             std::cout << ", ";
             n += new_n + 1;
             std::cout << ip << ':' << port;
