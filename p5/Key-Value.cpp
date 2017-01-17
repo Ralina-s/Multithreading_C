@@ -8,6 +8,7 @@
 #include <functional>
 
 #include <unistd.h>
+#include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -289,17 +290,20 @@ int main() {
 	    	my_table.set("3", "дисперсионный гиппопотам");
 	    	my_table.get("4", trash);
 			my_table.get("2", trash);
+			exit(0);
 		} else {
 			my_table.set("5", "двойственный ленивец");
 			my_table.delete_key("3");
 			my_table.get("6", trash);
+			exit(0);
 		}
     } else {
     	if (!fork()) {
 	    	my_table.set("2", "инверсионная лама");
 			my_table.delete_key("2");
 			my_table.delete_key("4");
-			my_table.set("4", "топологический утконос");	
+			my_table.set("4", "топологический утконос");
+			exit(0);
 		} else {
 			my_table.set("6", "логарифмический тапир");
 			my_table.get("3", trash);
@@ -307,7 +311,8 @@ int main() {
 			my_table.get("1", trash);
 		}
     }
-	std::cout << std::flush;
+	
+	while(wait(NULL) > 0);
 	
 	return 0;
 }
