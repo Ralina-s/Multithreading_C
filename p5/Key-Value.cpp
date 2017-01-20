@@ -62,8 +62,7 @@ public:
 		hashlist[MAX_KEY - 1].next = NULL;
 		hashlist[MAX_KEY - 1].prev = hashlist + (MAX_KEY - 2);
 		hashlist[MAX_KEY - 1].n = MAX_KEY - 1;
-
-		
+	
 
 		// data
 		key_t key2 = ftok("./..", getpid());
