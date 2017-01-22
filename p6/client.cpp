@@ -27,7 +27,6 @@ void Client::receive() {
         sleep(1);
         poll(&poll_fd, 1, 1);
         if (poll_fd.revents & poll_fd.events) {
-                std::cout << "получила событие, которое ждала" << std::endl << std::flush;
             int mes_len = recv(poll_fd.fd, buf, sizeof(buf), MSG_NOSIGNAL);
             if (mes_len <= 0) {
                 shutdown(client, SHUT_RDWR);
@@ -47,13 +46,10 @@ int Client::set(std::string key, std::string value, int ttl) {
     memcpy(buf + 1 + KEY_SIZE + VALUE_SIZE, &ttl, TTL_SIZE);
 
     if (is_invalid(send(poll_fd.fd, buf, strlen(buf), MSG_NOSIGNAL))) {
-            std::cout << "не получилось отправить" << std::endl << std::flush;
         return -1;
     }   
 
-    std::cout << "перед ресив" << std::endl << std::flush;
     receive();
-    std::cout << "после ресив" << std::endl << std::flush;
 
     printf("%s\n", buf + 1);
     fflush(stdout);
