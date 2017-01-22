@@ -71,7 +71,7 @@ void Server::accept_client() {
 
     struct epoll_event ev;
     ev.data.fd = client;
-    ev.events = EPOLLIN;
+    ev.events = EPOLLIN | EPOLLET;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client, &ev);
     clients.insert(client);
 }
@@ -84,29 +84,29 @@ void Server::run() {
             if(events[i].data.fd == server) {
                 accept_client();
             } else {
-                memset(buf, 0, sizeof(buf));
-                int mes_len = recv(events[i].data.fd, buf, sizeof(buf), MSG_NOSIGNAL);
+                memset(buf, 0, BUF_SIZE);
+                int mes_len = recv(events[i].data.fd, buf, BUF_SIZE, MSG_NOSIGNAL);
                 if (mes_len <= 0) {
                     shutdown(events[i].data.fd, SHUT_RDWR);
                     close(events[i].data.fd);
                     clients.erase(events[i].data.fd);
                     continue;
-                }
+                } 
 
-                struct Args args;
-                args.key = buf + 1;
-                args.value = buf + 1 + KEY_SIZE;
-                sscanf(buf + 1 + KEY_SIZE + VALUE_SIZE, "%d", &args.time_to_live);
-                args.client = events[i].data.fd;
-                args.this_class = this;
+                struct Args* args = (struct Args*) calloc (1, sizeof(struct Args));
+                memcpy(args->key, buf + 1, KEY_SIZE);
+                memcpy(args->value, buf + 1 + KEY_SIZE, VALUE_SIZE);
+                sscanf(buf + 1 + KEY_SIZE + VALUE_SIZE, "%d", &args->time_to_live);
+                args->client = events[i].data.fd;
+                args->this_class = this;
 
                 pthread_t thread;
                 if (buf[0] == SET) {
-                    pthread_create(&thread, NULL, call_set, (void*) &args);
+                    pthread_create(&thread, NULL, call_set, (void*) args);
                 } else if (buf[0] == GET) {
-                    pthread_create(&thread, NULL, call_get, (void*) &args);
+                    pthread_create(&thread, NULL, call_get, (void*) args);
                 } else if (buf[0] == DELETE) {
-                    pthread_create(&thread, NULL, call_delete_key, (void*) &args);
+                    pthread_create(&thread, NULL, call_delete_key, (void*) args);
                 }
             }
         }
@@ -139,8 +139,9 @@ void* Server::set(void* arg) {
         mes += ", value = ";
         mes += value;
     }
-    memcpy(buf + 1, mes.c_str(), sizeof(buf));
-    send(client, buf, sizeof(buf), MSG_NOSIGNAL);
+    memcpy(buf + 1, mes.c_str(), BUF_SIZE);
+    send(client, buf, BUF_SIZE, MSG_NOSIGNAL);
+    free(args);
     return NULL;  
 }
 
@@ -159,7 +160,7 @@ void* Server::get(void* arg) {
         mes = "Ошибка получения значения ";
         mes += key;
         mes += ": ключ не найден";
-    } else if (result == UPDATED || result == ADDED) {
+    } else if (result == FOUND) {
         buf[0] = result;
         mes = "Найдено: ";
         mes += "key = ";
@@ -167,8 +168,8 @@ void* Server::get(void* arg) {
         mes += ", value = ";
         mes += value;
     }
-    memcpy(buf + 1, mes.c_str(), sizeof(buf));
-    send(client, buf, sizeof(buf), MSG_NOSIGNAL);
+    memcpy(buf + 1, mes.c_str(), BUF_SIZE);
+    send(client, buf, BUF_SIZE, MSG_NOSIGNAL);
     return NULL;  
 }
 
@@ -186,20 +187,20 @@ void* Server::delete_key(void* arg) {
         mes = "Ошибка удаления ключа ";
         mes += key;
         mes += ": ключ не найден";
-    } else if (result == UPDATED || result == ADDED) {
+    } else if (result == DELETED) {
         buf[0] = result;
         mes = "Удалено: ";
         mes += "key = ";
         mes += key;
     }
-    memcpy(buf + 1, mes.c_str(), sizeof(buf));
-    send(client, buf, sizeof(buf), MSG_NOSIGNAL);
+    memcpy(buf + 1, mes.c_str(), BUF_SIZE);
+    send(client, buf, BUF_SIZE, MSG_NOSIGNAL);
     return NULL;  
 }
 
 void* Server::ttl_run(void* arg) {
     while (1) {
-        sleep(60);
+        sleep(6);
         key_value.delete_all_ttl();
     }
     return NULL;
