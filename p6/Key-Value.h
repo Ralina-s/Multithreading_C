@@ -14,7 +14,7 @@ public:
     ~Key_Value();
 
     int set(std::string key, std::string value, int ttl);
-    int get(std::string key, std::string return_value);
+    int get(std::string key, std::string& return_value);
     int delete_key(std::string key);
     void delete_all_ttl();
 
