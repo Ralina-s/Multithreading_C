@@ -35,8 +35,8 @@ public:
 };
 
 struct Args {
-    std::string key;
-    std::string value;
+    char key[KEY_SIZE];
+    char value[VALUE_SIZE];
     int time_to_live;
     int client;
     Server* this_class;
