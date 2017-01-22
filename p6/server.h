@@ -9,6 +9,7 @@
 void* call_set(void*);
 void* call_get(void*);
 void* call_delete_key(void*);
+void* call_ttl_run(void* arg);
 
 class Server {
     Key_Value key_value;
@@ -30,11 +31,13 @@ public:
     void* set(void* arg);
     void* get(void* arg);
     void* delete_key(void* arg);
+    void* ttl_run(void* arg);
 };
 
 struct Args {
     std::string key;
     std::string value;
+    int time_to_live;
     int client;
     Server* this_class;
 };
