@@ -79,25 +79,18 @@ void Server::accept_client() {
 
 void Server::run() {
     while (1) {
-                std::cout << "жду событие" << std::endl << std::flush;
         int events_cnt = epoll_wait(epoll_fd, events, EPOLL_SIZE, -1);
         for (int i = 0; i < events_cnt; i++) {
-                std::cout << "сервер получил событие" << std::endl << std::flush;
             if(events[i].data.fd == server) {
-                std::cout << "аксепт" << std::endl << std::flush;
                 accept_client();
             } else {
-                std::cout << "есть событие" << std::endl << std::flush;
                 memset(buf, 0, sizeof(buf));
                 int mes_len = recv(events[i].data.fd, buf, sizeof(buf), MSG_NOSIGNAL);
                 if (mes_len <= 0) {
-                    std::cout << "получил сообщение меньше 0" << std::endl << std::flush;
                     shutdown(events[i].data.fd, SHUT_RDWR);
                     close(events[i].data.fd);
                     clients.erase(events[i].data.fd);
                     continue;
-                } else {
-                    std::cout << "получил нормальное сообщение" << std::endl << std::flush;
                 }
 
                 struct Args args;
@@ -109,7 +102,6 @@ void Server::run() {
 
                 pthread_t thread;
                 if (buf[0] == SET) {
-                    std::cout << "делаю сет в кей" << std::endl << std::flush;
                     pthread_create(&thread, NULL, call_set, (void*) &args);
                 } else if (buf[0] == GET) {
                     pthread_create(&thread, NULL, call_get, (void*) &args);
@@ -122,7 +114,6 @@ void Server::run() {
 }
 
 void* Server::set(void* arg) {
-                std::cout << "дошел до сета" << std::endl << std::flush;
     struct Args* args = (struct Args*) arg;
     std::string key = args->key;
     std::string value = args->value;
